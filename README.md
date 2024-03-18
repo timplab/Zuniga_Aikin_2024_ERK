@@ -8,3 +8,5 @@ This repo contains the following:
 - Analysis QC plots including PCA plot and known gene expression boxplots: [plots](plots) (Note: not manuscript figures)
 - R object containing read counts: [r_objects](r_objects)
 - Sample and alignment information: [sample_info](sample_info)
+
+Repo is archived with a DOI on Zenodo: [![DOI](https://zenodo.org/badge/773859416.svg)](https://zenodo.org/doi/10.5281/zenodo.10835497)
