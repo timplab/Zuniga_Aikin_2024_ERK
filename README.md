@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10835498.svg)](https://doi.org/10.5281/zenodo.10835498)# Code associated with RNA-seq processing for "Sustained ERK Signaling Promotes G2 Cell Cycle Exit and primes cells for Whole Genome Duplication" Zuniga and Aikin, et al., (2024).
+# Code associated with RNA-seq processing for "Sustained ERK Signaling Promotes G2 Cell Cycle Exit and primes cells for Whole Genome Duplication" Zuniga and Aikin, et al., (2024).
 ## Author: Paul W. Hook (Timp Lab, JHU)
 
 This repo contains the following:
@@ -9,4 +9,4 @@ This repo contains the following:
 - R object containing read counts: [r_objects](r_objects)
 - Sample and alignment information: [sample_info](sample_info)
 
-Repo is archived with a DOI on Zenodo: [![DOI](https://zenodo.org/badge/773859416.svg)](https://zenodo.org/doi/10.5281/zenodo.10835497)
+Repo is archived with a DOI on Zenodo: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10835498.svg)](https://doi.org/10.5281/zenodo.10835498)
