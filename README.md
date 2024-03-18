@@ -9,4 +9,4 @@ This repo contains the following:
 - R object containing read counts: [r_objects](r_objects)
 - Sample and alignment information: [sample_info](sample_info)
 
-Repo is archived with a DOI on Zenodo: [![DOI](https://zenodo.org/badge/773859416.svg)](https://zenodo.org/doi/10.5281/zenodo.10835497)
+Repo is archived with a DOI on Zenodo that will always point to most recent version: [![DOI](https://zenodo.org/badge/773859416.svg)](https://zenodo.org/doi/10.5281/zenodo.10835497)
