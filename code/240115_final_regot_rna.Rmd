@@ -1,0 +1,252 @@
+---
+title: "regot rna"
+author: "Paul Hook"
+date: "01/15/2024"
+output: html_document
+---
+
+### load libraries needed for analysis
+```{r}
+library(tidyverse)
+library(magrittr)
+library(Rsamtools)
+library(GenomicFeatures)
+library(limma)
+library(edgeR)
+library(ggplot2)
+library(RColorBrewer)
+library(biomaRt)
+library(reshape2)
+library(patchwork)
+```
+
+### Load counts
+```{r}
+# Load count matrix
+dat <- read_tsv("/mithril/Data/NGS/projects/regot_rna/data/quant/regot_counts.txt",skip=1)
+
+# Process count matrix to a format need to create stuff for a DGE object
+dat.counts <- dat %>%
+  dplyr::select(-Chr,-Start,-End,-Strand)
+sample_names <- str_split(colnames(dat.counts)[-1:-2],pattern = "_") %>% sapply(magrittr::extract2,6)
+colnames(dat.counts) <- c("geneid","length",sample_names)
+
+# Create components needed for a DGEobject
+annotation <- dat.counts %>% dplyr::select(geneid,length)
+count <- dat.counts %>% dplyr::select(-geneid,-length)
+```
+
+### Make DGE object
+```{r}
+# Creating DGE object
+gencode.DGE <- DGEList(counts=count, genes=annotation)
+gencode.DGE <- calcNormFactors(gencode.DGE)
+
+# Saving DGE object
+saveRDS(object=gencode.DGE,file = "~/code/pwh_projects/regot_rna/220613_regot_dge.rds")
+
+# Quick look at DGE object
+dim(gencode.DGE)
+
+# Plot MDS just to get a feel of how the data looks
+plotMDS(gencode.DGE, dim.plot = c(1,2))
+
+# Quick look at samples and norm factors
+gencode.DGE$samples
+
+# Identifying expressed genes
+cutoff <- as.numeric(cpm(10, mean(gencode.DGE$samples$lib.size)))
+gencode.isexpr <- rowSums(cpm(gencode.DGE) > cutoff) >= 3
+
+# Filtering for expressed genes
+gencode.DGE.isexpr <- gencode.DGE[gencode.isexpr, ,keep.lib.sizes = FALSE] # resets the library sizes, excluding the filtered out genes
+
+# Recalculating the library norm factors
+gencode.DGE.isexpr <- calcNormFactors(gencode.DGE.isexpr)
+
+# Look at some metrics from the dge object to make sure nothing everything is OK
+summary(gencode.isexpr)
+dim(gencode.DGE.isexpr)
+plotMDS(gencode.DGE.isexpr)
+
+# Converting the gencode.DGE.isexpr counts to log2(cpm) matrix that will be used going forward
+gencode.counts.cpm <- cpm(gencode.DGE.isexpr,log = TRUE)
+head(gencode.counts.cpm)
+gencode.counts.cpm <- as.data.frame(gencode.counts.cpm)
+```
+
+### Run PCA analysis to check that experiment and samples are what we expect
+```{r}
+# Running the PCA analysis using the built-in R function prcomp. "scale" option not needed since I already scaled the data with cpm and log2
+pcCount <- prcomp(t(gencode.counts.cpm),retx = TRUE) # PCA analysis
+summary(pcCount) # Summary which shows % variance
+
+# Save percent variance and cumulative variance
+percentVar <- round(pcCount$sdev)^2 / sum((pcCount$sdev)^2)
+cumVar <- cumsum((pcCount$sdev)^2) / sum((pcCount$sdev)^2) 
+
+# Save pc1 and pc2 for plotting and make labels
+pc1 <- round(percentVar[1]*100,1)
+pc2 <- round(percentVar[2]*100,1)
+xlabel <- paste0("PC1"," ","(",pc1, "% variance explained",")")
+ylabel <- paste0("PC2"," ","(",pc2,"% variance explained",")")
+
+# Create a df containing sample names
+names <- rownames(gencode.DGE.isexpr$samples)
+groups <- data.frame(time = c(rep("0",3),rep("4",3),rep("12",3),rep("24",3),rep("96",3)))
+batch <- rep(c("1","2","3"),5)
+names_count <- data.frame(names, groups, batch)
+names_count$time <- factor(names_count$time,levels = c("0","4","12","24","96"))
+
+# Make a scoresCount table using the x data (a numeric or complex matrix (or data frame) which provides the data for the principal components analysis.) and the names of the samples
+scoresCount <- data.frame(pcCount$x, names_count) 
+
+# Load a palatte for plotting
+brewer.pal(6,"Set2")
+my_palette <- brewer.pal(6,"Set2") # "#66C2A5" "#FC8D62" "#8DA0CB"
+
+# Plot the PCA analysis for PC1 and PC2
+pcaCount <- ggplot(scoresCount, aes(x=PC1, y=PC2)) +
+  geom_point(size = 8, aes(col=time)) +
+  ggtitle("PC1 vs. PC2\nUsing log2(cpm) counts") +
+  geom_text(aes(label=names),hjust=0.5, vjust=1) +
+  xlab(xlabel) +
+  ylab(ylabel) +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5)) +
+  guides(col=guide_legend(title="Time (hrs)"))
+pcaCount
+
+# saving pca plot
+ggsave(pcaCount,filename = "~/code/pwh_projects/regot_rna/240115_pca.png",width = 7,height = 4.5,units = "in")
+
+# saving loadings in case they are needed going forward
+loadings <- data.frame(gencode.DGE.isexpr$genes$geneid,pcCount$rotation)
+```
+
+### Get gene annotation data from biomart
+```{r}
+### grabbing biomart gene names
+ensembl105 <- useEnsembl(biomart = 'genes', 
+                       dataset = 'hsapiens_gene_ensembl',
+                       version = 105)
+```
+
+### Annotate count matrices
+```{r}
+### expressed
+gencode.counts.cpm
+gencode.counts.cpm$geneid <- gencode.DGE.isexpr$genes$geneid
+gencode.counts.cpm$ensembl <- strsplit(gencode.counts.cpm$geneid, "[.]") %>% sapply(extract2, 1)
+expr.genes <- getBM(attributes=c('ensembl_gene_id','hgnc_symbol'), 
+      filters = 'ensembl_gene_id', 
+      values = unique(gencode.counts.cpm$ensembl), 
+      mart = ensembl105)
+expr.genes.cpm.df <- merge(x=gencode.counts.cpm,
+                           y=expr.genes,by.x="ensembl",
+                           by.y="ensembl_gene_id",keep.x=TRUE) %>% 
+  dplyr::select(-ensembl) %>% relocate(hgnc_symbol,geneid)
+expr.genes.cpm.df <- expr.genes.cpm.df %>% mutate_all(na_if,"")
+write_tsv(expr.genes.cpm.df,path = "220315_expressed.genes_regot.txt")
+
+### all
+gencode.DGE
+gencode.all.cpm <- cpm(gencode.DGE,log = TRUE)
+gencode.all.cpm <- as.data.frame(gencode.all.cpm)
+gencode.all.cpm$geneid <- gencode.DGE$genes$geneid
+head(gencode.all.cpm)
+gencode.all.cpm$ensembl <- strsplit(gencode.all.cpm$geneid, "[.]") %>% sapply(extract2, 1)
+all.genes <- getBM(attributes=c('ensembl_gene_id','hgnc_symbol'), 
+      filters = 'ensembl_gene_id', 
+      values = unique(gencode.all.cpm$ensembl), 
+      mart = ensembl105)
+all.genes.cpm.df <- merge(x=gencode.all.cpm,y=all.genes,by.x="ensembl",by.y="ensembl_gene_id",keep.x=TRUE) %>% dplyr::select(-ensembl) %>% relocate(hgnc_symbol,geneid)
+all.genes.cpm.df <- all.genes.cpm.df %>% mutate_all(na_if,"")
+write_tsv(all.genes.cpm.df,path = "220315_all.genes_regot.txt")
+```
+
+### Make some boxplots of expression of expected genes
+```{r}
+# make count df for use with plotting
+melted_norm_counts <-data.frame(melt(gencode.counts.cpm))
+counts.df <- merge(x=melted_norm_counts,y=names_count,by.x="variable",by.y="names",keep.x=TRUE) %>% dplyr::select(-variable)
+counts.df$ensembl <- strsplit(counts.df$geneid, "[.]") %>% sapply(extract2, 1)
+counts.genes <- getBM(attributes=c('ensembl_gene_id','hgnc_symbol'), 
+      filters = 'ensembl_gene_id', 
+      values = unique(counts.df$ensembl), 
+      mart = ensembl105)
+genes.cpm.df <- merge(x=counts.df,y=counts.genes,
+                      by.x="ensembl",by.y="ensembl_gene_id",
+                      keep.x=TRUE) %>% 
+  dplyr::select(-ensembl) %>% relocate(hgnc_symbol)
+
+### BRAF
+braf <- ggplot(genes.cpm.df %>% dplyr::filter(hgnc_symbol=="BRAF"), aes(x = as.factor(time), y = value)) +
+  geom_boxplot(aes(fill = time)) + geom_jitter() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,size = 10,face="bold"),
+        axis.text.y = element_text(size = 10,face="bold"),
+        axis.title.y= element_text(size=12,face = "bold"),
+        axis.title.x= element_text(size=12,face = "bold"),
+        plot.title = element_text(hjust = 0.5,face = "bold.italic")) + 
+  labs(title="BRAF") + xlab("Time (Hours)") + ylab("log2(counts per million)") + guides(fill="none")
+braf
+
+## CD55
+cd55 <- ggplot(genes.cpm.df %>% dplyr::filter(hgnc_symbol=="CD55"), aes(x = as.factor(time), y = value)) +
+  geom_boxplot(aes(fill = time)) + geom_jitter() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,size = 10,face="bold"),
+        axis.text.y = element_text(size = 10,face="bold"),
+        axis.title.y= element_text(size=12,face = "bold"),
+        axis.title.x= element_text(size=12,face = "bold"),
+        plot.title = element_text(hjust = 0.5,face = "bold.italic")) + 
+  labs(title="CD55") + xlab("Time (Hours)") + ylab("log2(counts per million)") + guides(fill="none")
+cd55
+
+### AREG
+areg <- ggplot(genes.cpm.df %>% dplyr::filter(hgnc_symbol=="AREG"), aes(x = as.factor(time), y = value)) +
+  geom_boxplot(aes(fill = time)) + geom_jitter() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,size = 10,face="bold"),
+        axis.text.y = element_text(size = 10,face="bold"),
+        axis.title.y= element_text(size=12,face = "bold"),
+        axis.title.x= element_text(size=12,face = "bold"),
+        plot.title = element_text(hjust = 0.5,face = "bold.italic")) + 
+  labs(title="AREG") + xlab("Time (Hours)") + ylab("log2(counts per million)") + guides(fill="none")
+
+### SOX4
+sox4 <- ggplot(genes.cpm.df %>% dplyr::filter(hgnc_symbol=="SOX4"), aes(x = as.factor(time), y = value)) +
+  geom_boxplot(aes(fill = time)) + geom_jitter() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,size = 10,face="bold"),
+        axis.text.y = element_text(size = 10,face="bold"),
+        axis.title.y= element_text(size=12,face = "bold"),
+        axis.title.x= element_text(size=12,face = "bold"),
+        plot.title = element_text(hjust = 0.5,face = "bold.italic")) + 
+  labs(title="SOX4") + xlab("Time (Hours)") + ylab("log2(counts per million)") + guides(fill="none")
+
+### MKI67
+mki67 <- ggplot(genes.cpm.df %>% dplyr::filter(hgnc_symbol=="MKI67"), aes(x = as.factor(time), y = value)) +
+  geom_boxplot(aes(fill = time)) + geom_jitter() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,size = 10,face="bold"),
+        axis.text.y = element_text(size = 10,face="bold"),
+        axis.title.y= element_text(size=12,face = "bold"),
+        axis.title.x= element_text(size=12,face = "bold"),
+        plot.title = element_text(hjust = 0.5,face = "bold.italic")) + 
+  labs(title="MKI67") + xlab("Time (Hours)") + ylab("log2(counts per million)") + guides(fill="none")
+
+### TP63
+tp63 <- ggplot(genes.cpm.df %>% dplyr::filter(hgnc_symbol=="TP63"), aes(x = as.factor(time), y = value)) +
+  geom_boxplot(aes(fill = time)) + geom_jitter() +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1,size = 10,face="bold"),
+        axis.text.y = element_text(size = 10,face="bold"),
+        axis.title.y= element_text(size=12,face = "bold"),
+        axis.title.x= element_text(size=12,face = "bold"),
+        plot.title = element_text(hjust = 0.5,face = "bold.italic")) + 
+  labs(title="TP63") + xlab("Time (Hours)") + ylab("log2(counts per million)") + guides(fill="none")
+
+example.plot <- braf + areg + cd55 + sox4 + mki67 + tp63
+ggsave(plot=example.plot,filename = "~/code/pwh_projects/regot_rna/240116_ex_genes.png",width = 10, height = 6)
+```

@@ -1,0 +1,119 @@
+==> A1_wtimp1_EMT_novaseq_S2_summary <==
+66221467 reads; of these:
+  66221467 (100.00%) were paired; of these:
+    6303118 (9.52%) aligned concordantly 0 times
+    57759197 (87.22%) aligned concordantly exactly 1 time
+    2159152 (3.26%) aligned concordantly >1 times
+90.48% overall alignment rate
+
+==> A2_wtimp1_EMT_novaseq_S12_summary <==
+56455862 reads; of these:
+  56455862 (100.00%) were paired; of these:
+    5784888 (10.25%) aligned concordantly 0 times
+    48437950 (85.80%) aligned concordantly exactly 1 time
+    2233024 (3.96%) aligned concordantly >1 times
+89.75% overall alignment rate
+
+==> A3_wtimp1_EMT_novaseq_S8_summary <==
+59499073 reads; of these:
+  59499073 (100.00%) were paired; of these:
+    5572207 (9.37%) aligned concordantly 0 times
+    51965491 (87.34%) aligned concordantly exactly 1 time
+    1961375 (3.30%) aligned concordantly >1 times
+90.63% overall alignment rate
+
+==> B1_wtimp1_EMT_novaseq_S14_summary <==
+73754356 reads; of these:
+  73754356 (100.00%) were paired; of these:
+    7503874 (10.17%) aligned concordantly 0 times
+    63841472 (86.56%) aligned concordantly exactly 1 time
+    2409010 (3.27%) aligned concordantly >1 times
+89.83% overall alignment rate
+
+==> B2_wtimp1_EMT_novaseq_S15_summary <==
+58833493 reads; of these:
+  58833493 (100.00%) were paired; of these:
+    6263646 (10.65%) aligned concordantly 0 times
+    47510940 (80.75%) aligned concordantly exactly 1 time
+    5058907 (8.60%) aligned concordantly >1 times
+89.35% overall alignment rate
+
+==> B3_wtimp1_EMT_novaseq_S13_summary <==
+75279205 reads; of these:
+  75279205 (100.00%) were paired; of these:
+    7199050 (9.56%) aligned concordantly 0 times
+    65613594 (87.16%) aligned concordantly exactly 1 time
+    2466561 (3.28%) aligned concordantly >1 times
+90.44% overall alignment rate
+
+==> C1_wtimp1_EMT_novaseq_S6_summary <==
+76340507 reads; of these:
+  76340507 (100.00%) were paired; of these:
+    7811136 (10.23%) aligned concordantly 0 times
+    66224401 (86.75%) aligned concordantly exactly 1 time
+    2304970 (3.02%) aligned concordantly >1 times
+89.77% overall alignment rate
+
+==> C2_wtimp1_EMT_novaseq_S9_summary <==
+62426935 reads; of these:
+  62426935 (100.00%) were paired; of these:
+    6818332 (10.92%) aligned concordantly 0 times
+    53205867 (85.23%) aligned concordantly exactly 1 time
+    2402736 (3.85%) aligned concordantly >1 times
+89.08% overall alignment rate
+
+==> C3_wtimp1_EMT_novaseq_S1_summary <==
+91108054 reads; of these:
+  91108054 (100.00%) were paired; of these:
+    8803574 (9.66%) aligned concordantly 0 times
+    79187266 (86.92%) aligned concordantly exactly 1 time
+    3117214 (3.42%) aligned concordantly >1 times
+90.34% overall alignment rate
+
+==> D1_wtimp1_EMT_novaseq_S3_summary <==
+62927503 reads; of these:
+  62927503 (100.00%) were paired; of these:
+    6439432 (10.23%) aligned concordantly 0 times
+    54660724 (86.86%) aligned concordantly exactly 1 time
+    1827347 (2.90%) aligned concordantly >1 times
+89.77% overall alignment rate
+
+==> D2_wtimp1_EMT_novaseq_S10_summary <==
+55823028 reads; of these:
+  55823028 (100.00%) were paired; of these:
+    5743169 (10.29%) aligned concordantly 0 times
+    46310201 (82.96%) aligned concordantly exactly 1 time
+    3769658 (6.75%) aligned concordantly >1 times
+89.71% overall alignment rate
+
+==> D3_wtimp1_EMT_novaseq_S11_summary <==
+71287420 reads; of these:
+  71287420 (100.00%) were paired; of these:
+    6633333 (9.31%) aligned concordantly 0 times
+    61898250 (86.83%) aligned concordantly exactly 1 time
+    2755837 (3.87%) aligned concordantly >1 times
+90.69% overall alignment rate
+
+==> E1_wtimp1_EMT_novaseq_S7_summary <==
+58016628 reads; of these:
+  58016628 (100.00%) were paired; of these:
+    5358845 (9.24%) aligned concordantly 0 times
+    50960829 (87.84%) aligned concordantly exactly 1 time
+    1696954 (2.92%) aligned concordantly >1 times
+90.76% overall alignment rate
+
+==> E2_wtimp1_EMT_novaseq_S4_summary <==
+49671898 reads; of these:
+  49671898 (100.00%) were paired; of these:
+    5137189 (10.34%) aligned concordantly 0 times
+    43151664 (86.87%) aligned concordantly exactly 1 time
+    1383045 (2.78%) aligned concordantly >1 times
+89.66% overall alignment rate
+
+==> E3_wtimp1_EMT_novaseq_S5_summary <==
+70295661 reads; of these:
+  70295661 (100.00%) were paired; of these:
+    6788227 (9.66%) aligned concordantly 0 times
+    61396734 (87.34%) aligned concordantly exactly 1 time
+    2110700 (3.00%) aligned concordantly >1 times
+90.34% overall alignment rate
